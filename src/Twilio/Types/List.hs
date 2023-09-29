@@ -27,6 +27,7 @@ import Data.Text (Text)
 import Debug.Trace (trace)
 import GHC.Generics
 import Network.URI
+import qualified Data.Aeson.Key as K
 
 (<&>) :: Functor f => f a -> (a -> b) -> f b
 (<&>) = flip fmap
@@ -50,8 +51,10 @@ class FromJSON b => List a b | a -> b where
   parseJSONToList o@(Object v)
       =  unwrap (getListWrapper :: Wrapper (Maybe PagingInformation -> [b] -> a))
      <$> maybePagingInformation
-     <*> (v .: getConst (getPlural :: Const Text (a, b)) :: Parser [b])
+     <*> (v .: k :: Parser [b])
     where
+      k =
+        K.fromText $ getConst (getPlural :: Const Text (a, b))
       maybePagingInformation = case fromJSON o of
         Success pagingInformation -> return $ Just pagingInformation
         _ -> return Nothing

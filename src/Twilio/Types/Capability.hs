@@ -12,8 +12,10 @@ module Twilio.Types.Capability where
 
 import Control.Monad
 import Data.Aeson
-import qualified Data.HashMap.Strict as HashMap
 import Data.Set (Set)
+import qualified Data.Aeson.Key as K
+import qualified Data.Aeson.KeyMap as KM
+import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Set as Set
 import qualified Data.Text as T
 
@@ -26,12 +28,12 @@ data Capability
   deriving (Bounded, Enum, Eq, Ord, Read, Show)
 
 instance {-# OVERLAPPING #-} FromJSON Capabilities where
-  parseJSON (Object map) 
+  parseJSON (Object obj)
     = let map' = fmap (\value -> case value of
                         Bool bool     -> bool
-                        _             -> False) map
+                        _             -> False) obj
       in  return $ foldr (\capability set ->
-            if HashMap.lookupDefault False (T.pack $ show capability) map'
+            if KM.lookup (K.fromString $ show capability) map' == Just True
               then Set.insert capability set
               else set
           ) Set.empty [Voice, SMS, MMS]
